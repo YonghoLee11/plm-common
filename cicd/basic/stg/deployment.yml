@@ -1,0 +1,155 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plm-python-common-basic-stg
+  labels:
+    app: plm-python-common-basic-stg
+    prjId: plm
+    rscId: plm-python-common
+    target: basic
+    env: stg
+    locId: hy-koic-k8s-app-d01
+spec:
+  replicas: "[설정 값 변경 불가]"
+  selector:
+    matchLabels:
+      app: plm-python-common-basic-stg
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: plm-python-common-basic-stg
+        ## 필수
+        prjId: plm
+        rscId: plm-python-common
+        target: basic
+        env: stg
+        locId: hy-koic-k8s-app-d01
+        ## 추가
+        prjCat: Apps
+        svcType: app
+        appType: WP-PYTHON
+        logging: project
+    spec:
+      containers:
+      - name: plm-python-common-basic-stg
+        image: "[설정 값 변경 불가]"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+          protocol: TCP
+        env:
+        - name: spring.profiles.active
+          value: stg
+        - name: user.timezone
+          value: Asia/Seoul
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - sh
+              - -c
+              - sleep 30
+        livenessProbe:
+          httpGet:
+            path: /plm-python-common/swagger.json
+            port: 5000
+          initialDelaySeconds: 60
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /plm-python-common/swagger.json
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 3
+          failureThreshold: 10
+        resources:
+          limits:
+            cpu: "[설정 값 변경 불가]"
+            memory: "[설정 값 변경 불가]"
+          requests:
+            cpu: "[설정 값 변경 불가]"
+            memory: "[설정 값 변경 불가]"
+        volumeMounts:
+        - name: timezone-config
+          mountPath: /etc/localtime
+      volumes:
+      - name: timezone-config
+        hostPath:
+          path: /usr/share/zoneinfo/Asia/Seoul
+      serviceAccountName: default
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: plm-python-common-basic-stg-svc
+  labels:
+    app: plm-python-common-basic-stg
+    prjId: plm
+    rscId: plm-python-common
+    target: basic
+    env: stg
+    locId: hy-koic-k8s-app-d01
+spec:
+  selector:
+    app: plm-python-common-basic-stg
+  ports:
+  - name: tcp
+    port: 5000
+    targetPort: 5000
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: plm-python-common-basic-stg-ingress
+  labels:
+    app: plm-python-common-basic-stg
+    prjId: plm
+    rscId: plm-python-common
+    target: basic
+    env: stg
+    locId: hy-koic-k8s-app-d01
+#  annotations:
+#    ingress.kubernetes.io/rewrite-target: /plm-python-common/
+spec:
+  rules:
+  - host: plm-python-common-basic-stg.api.hcpnd01.skhynix.com
+    http:
+      paths:
+#      - path: /plm-python-common/
+      - path: /
+        backend:
+          serviceName: plm-python-common-basic-stg-svc
+          servicePort: 5000
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: plm-python-common-basic-stg-hpa
+  labels:
+    app: plm-python-common-basic-stg
+    prjId: plm
+    rscId: plm-python-common
+    target: basic
+    env: stg
+    locId: hy-koic-k8s-app-d01
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: plm-python-common-basic-stg
+  minReplicas: "[설정 값 변경 불가]"
+  maxReplicas: "[설정 값 변경 불가]"
+  targetCPUUtilizationPercentage: "[설정 값 변경 불가]"

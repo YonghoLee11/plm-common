@@ -1,0 +1,11 @@
+# folder
+.vscode
+__pycache__
+__venv__
+venv
+migrations
+
+# file
+.project
+.tfignore
+.gitignore

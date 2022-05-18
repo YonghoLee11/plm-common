@@ -1,0 +1,45 @@
+{
+    "id": "[설정 값 변경 불가]",
+    "instances": "[설정 값 변경 불가]",
+    "container": {
+      "type": "DOCKER",
+      "volumes": "[설정 값 변경 불가]",
+      "docker": {
+        "image": "[설정 값 변경 불가]",
+        "forcePullImage": true,
+        "privileged": false,
+        "parameters": []
+      },
+      "portMappings": "[설정 값 변경 불가]"
+    },
+    "cpus": "[설정 값 변경 불가]",
+    "mem": "[설정 값 변경 불가]",
+    "requirePorts": false,
+    "networks": [
+      {
+        "mode": "container/bridge"
+      }
+    ],
+    "fetch": [],
+    "constraints": [ ["zone", "LIKE", "stg"], ["@hostname", "GROUP_BY"] ],
+    "labels": {
+      "HAPROXY_GROUP": "external"
+    },
+    "healthChecks": [
+      {
+        "gracePeriodSeconds": 300,
+        "intervalSeconds": 60,
+        "maxConsecutiveFailures": 3,
+        "portIndex": 0,
+        "timeoutSeconds": 20,
+        "delaySeconds": 15,
+        "protocol": "MESOS_HTTP",
+        "path": "/plm-python-common/swagger.json",
+        "ipProtocol": "IPv4"
+      }
+    ],
+    "env": {
+      "TZ": "Asia/Seoul",
+      "NLS_LANG": "Korean_Korea.UTF8"
+    }
+  }

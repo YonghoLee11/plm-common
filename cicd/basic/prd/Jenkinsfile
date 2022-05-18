@@ -1,0 +1,117 @@
+/*
+ * Repository URL
+ *   maven : http://mvn.skhynix.com/repository/maven-public
+ *   npm   : http://npm.skhynix.com/repository/npm-group
+ *   pip   : http://pip.skhynix.com/repository/pypi-group  
+ */
+ 
+ @Library(['jenkins-shared-library-v1.0']) _
+ 
+pipeline {
+    agent{ node { label 'jenkins-slaves-all-202011.01' } }
+	environment {
+		deploymentConfig = "basic"
+		deploymentTarget = "prd"
+		projectCategory = "Apps"
+		projectName = "plm"
+		serviceName = "plm-python-common"
+		serviceFullName = "${projectCategory}.${projectName}.${deploymentTarget}.${serviceName}.${deploymentConfig}"
+		dockerRegistryUrl = "docker-repo.skhynix.com"
+		dockerRegistryCredential = "dockerRegistryCredential"
+	}
+	
+	stages {
+		/******************************************************************************************************************
+		 * Prepare : 젠킨스 잡 빌드 전처리
+		 *******************************************************************************************************************/			
+		stage('Prepare') {
+			steps {
+				script {
+					common.preBuild("${serviceName}", "${serviceFullName}", "${deploymentTarget}", "${deploymentConfig}")
+				}
+			}
+		}
+		/******************************************************************************************************************
+		 * Docker Build : Docker Image BUILD
+		 *******************************************************************************************************************/		
+		stage('Docker Build') {
+			steps {
+				script {
+					sh 'mv ./cicd/${deploymentConfig}/${deploymentTarget}/Dockerfile ./Dockerfile'
+                    sh 'mv ./cicd/${deploymentConfig}/${deploymentTarget}/.dockerignore ./.dockerignore'
+					// dockerImageName = "${dockerRegistryUrl}/${projectCategory}/${projectName}/${deploymentTarget}/${serviceName}/${deploymentConfig}:${BUILD_NUMBER}".toLowerCase()
+                    dockerImageTag = (new Date().format("yyyyMMdd.HHmm")) + "." + BUILD_NUMBER
+                    dockerImageName = "${dockerRegistryUrl}/${projectCategory}/${projectName}/${deploymentTarget}/${serviceName}/${deploymentConfig}:${dockerImageTag}".toLowerCase()
+					dockerImage = docker.build("${dockerImageName}", "./")
+				}
+			}
+			post {
+				always {
+					script {
+						common.postStage("${serviceFullName}", "${deploymentTarget}")
+					}
+				}
+			}
+		}
+		/******************************************************************************************************************
+		 * Docker Push : Docker Image PUSH
+		 *******************************************************************************************************************/
+		stage('Docker Push') {
+			steps {
+				script {
+					docker.withRegistry("http://"+dockerRegistryUrl, dockerRegistryCredential) {
+						dockerImage.push()
+					}
+				}
+			}
+			post {
+				always {
+					script {
+						common.postStage("${serviceFullName}", "${deploymentTarget}")
+					}
+				}
+			}
+		}
+		/*******************************************************************************************************************
+		 * Deploy : Deploy
+		 *******************************************************************************************************************/
+		stage('Deploy') {
+			steps {
+				script {
+					common.deploy("${dockerImageName}", "${projectName}", "${serviceName}", "${deploymentConfig}", "${deploymentTarget}")
+				}
+			}
+			post {
+				always {
+					script {
+						common.postStage("${serviceFullName}", "${deploymentTarget}")
+					}
+				}
+			}
+		}
+	}
+	
+	/*******************************************************************************************************************
+	 * Finally : 젠킨스 잡 빌드 후처리
+	 *******************************************************************************************************************/
+	 post { 
+		always { 
+			script {
+				common.postBuild("${serviceFullName}", "${deploymentTarget}", "${deploymentConfig}")
+			}
+		}
+		success {
+			script {
+				common.postBuildSuccess("${serviceName}", "${serviceFullName}", "${deploymentTarget}")
+
+				// SONARQUBE 정적 분석 수행
+				// common.sonarScanner("${serviceName}")
+			}
+		}
+		failure {
+			script {
+				common.postBuildFailure("${serviceName}", "${serviceFullName}", "${deploymentTarget}")
+			}
+		}
+	}
+}

@@ -1,0 +1,110 @@
+
+# Directories
+__pycache__
+__venv__
+venv
+migrations
+build
+Directories
+*egg-info
+
+# files
+.project
+.pydevproject
+*.db
+
+
+###########################################################################################################################################################################################################################################################
+#
+# Pattern					Example matches				Explanation*
+#
+#==========================================================================================================================================================================================================================================================
+#
+# **/logs					logs/debug.log				You can prepend a pattern with a double asterisk to match directories anywhere in the repository.
+# 							logs/monday/foo.bar
+# 							build/logs/debug.log			
+#
+# **/logs/debug.log			logs/debug.log				You can also use a double asterisk to match files based on their name and the name of their parent directory.
+# 							build/logs/debug.log
+#							but not
+# 							logs/build/debug.log
+#
+# *.log	debug.log			foo.log						An asterisk is a wildcard that matches zero or more characters.
+# 							.log
+# 							logs/debug.log
+#
+# *.log						debug.log					Prepending an exclamation mark to a pattern negates it. If a file matches a pattern, but also matches a negating pattern defined later in the file, it will not be ignored.
+# !important.log			trace.log
+# 							but not
+# 							important.log
+# 							logs/important.log
+#
+# *.log						debug.log					Patterns defined after a negating pattern will re-ignore any previously negated files.
+# !important/*.log			important/trace.log
+# trace.*					but not
+# 							important/debug.log
+# 
+# /debug.log				debug.log					Prepending a slash matches files only in the repository root.
+# 							but not
+# 							logs/debug.log
+# 
+# debug.log					debug.log					By default, patterns match files in any directory
+# 							logs/debug.log
+#
+# debug?.log				debug0.log					A question mark matches exactly one character.
+# 							debugg.log
+# 							but not
+# 							debug10.log
+#
+# debug[0-9].log			debug0.log					Square brackets can also be used to match a single character from a specified range.
+# 							debug1.log
+# 							but not
+# 							debug10.log
+#
+# debug[01].log				debug0.log					Square brackets match a single character form the specified set.
+# 							debug1.log
+# 							but not
+# 							debug2.log
+# 							debug01.log
+# 
+# debug[!01].log			debug2.log					An exclamation mark can be used to match any character except one from the specified set.
+# 							but not
+# 							debug0.log
+# 							debug1.log
+# 							debug01.log
+#
+# debug[a-z].log			debuga.log					Ranges can be numeric or alphabetic.
+# 							debugb.log
+# 							but not
+# 							debug1.log
+#
+# logs						logs						If you don't append a slash, the pattern will match both files and the contents of directories with that name. In the example matches on the left, both directories and files named logs are ignored
+# 							logs/debug.log
+# 							logs/latest/foo.bar
+# 							build/logs
+# 							build/logs/debug.log
+#
+# logs/						logs/debug.log				Appending a slash indicates the pattern is a directory. The entire contents of any directory in the repository matching that name – including all of its files and subdirectories – will be ignored
+# 							logs/latest/foo.bar
+# 							build/logs/foo.bar
+# 							build/logs/latest/debug.log
+#
+# logs/						logs/debug.log				Wait a minute! Shouldn't logs/important.log be negated in the example on the left
+# !logs/important.log		logs/important.log			Nope! Due to a performance-related quirk in Git, you can not negate a file that is ignored due to a pattern matching a directory
+# 
+# logs/**/debug.log			logs/debug.log				A double asterisk matches zero or more directories.
+# 							logs/monday/debug.log
+# 							logs/monday/pm/debug.log
+#
+# logs/*day/debug.log		logs/monday/debug.log		Wildcards can be used in directory names as well.
+# 							logs/tuesday/debug.log
+# 							but not
+# 							logs/latest/debug.log
+#
+# logs/debug.log			logs/debug.log				Patterns specifying a file in a particular directory are relative to the repository root. (You can prepend a slash if you like, but it doesn't do anything special.)
+# 							but not
+# 							debug.log
+# 							build/logs/debug.log
+#
+###########################################################################################################################################################################################################################################################
+
